@@ -173,7 +173,9 @@ void loop()
               Serial.printf("Button %d - sending push notification\n", i);
               struct PushSaferInput input;
               input.title = "Ding Dong";
-              input.message = "There is someone at the door";
+              char *message = (char *)malloc(100);
+              sprintf(message, "There's someone at the door (%d)", i+1);
+              input.message=message;
               input.sound = 1;
               input.vibration = 3;
               input.icon = "1";
@@ -207,7 +209,7 @@ void loop()
               }
               else
               {
-                Serial.printf("Button %d - ignoring\n", i);
+                Serial.printf("Button %d - ignoring\n", i+1);
               }
             }
             found = true;
