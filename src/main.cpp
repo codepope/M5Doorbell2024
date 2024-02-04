@@ -132,6 +132,7 @@ void setup()
   Serial.println("WiFi connected");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+  M5.dis.fillpix(0x000000);
 
   pushsafer.debug = 9;
 }
@@ -170,12 +171,12 @@ void loop()
           {
             if (buttons[i].lastPressed + 5 < time(nullptr))
             {
-              Serial.printf("Button %d - sending push notification\n", i);
+              Serial.printf("Button %d - sending push notification\n", i + 1);
               struct PushSaferInput input;
               input.title = "Ding Dong";
               char *message = (char *)malloc(100);
-              sprintf(message, "There's someone at the door (%d)", i+1);
-              input.message=message;
+              sprintf(message, "There's someone at the door (%d)", i + 1);
+              input.message = message;
               input.sound = 1;
               input.vibration = 3;
               input.icon = "1";
@@ -189,15 +190,33 @@ void loop()
               input.retry = "";
               input.expire = "";
               input.answer = "";
-              Serial.println("Sending");
-              Serial.println(pushsafer.sendEvent(input));
-              Serial.println("Sent");
-              Serial.println(WiFi.status());
-              if(WiFi.status() != WL_CONNECTED)
+
+              // Let's try to reconnect if we're not connected
+              Serial.printf("Before sending %d\n", WiFi.status());
+              if (WiFi.status() != WL_CONNECTED)
               {
+                M5.dis.fillpix(0x0000FF);
+                delay(500);
                 Serial.println("Reconnecting");
                 WiFi.reconnect();
+                M5.dis.fillpix(0x000000);
               }
+
+              Serial.println("Sending");
+              pushsafer.sendEvent(input);
+              Serial.printf("After sending %d\n", WiFi.status());
+              
+              if (WiFi.status() != WL_CONNECTED)
+              {
+                M5.dis.fillpix(0x0000FF);
+                delay(500);
+                Serial.println("Reconnecting");
+                WiFi.reconnect();
+                M5.dis.fillpix(0x000000);
+              }
+
+              free(message);
+
               buttons[i].lastPressed = time(nullptr);
               muteignore = 10;
             }
@@ -209,7 +228,7 @@ void loop()
               }
               else
               {
-                Serial.printf("Button %d - ignoring\n", i+1);
+                Serial.printf("Button %d - ignoring\n", i + 1);
               }
             }
             found = true;
@@ -249,4 +268,5 @@ void loop()
     }
   }
   delete pdec0;
+  delay(500);
 }
